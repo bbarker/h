@@ -1,0 +1,23 @@
+<div id="dialog" class="sheet content">
+	<i class="close h-icon-close"
+   	   role="button"
+       title="Close"
+       ng-click="viaLinkDialog.visible = false"></i>
+    <div class="form-vertical tabbable">
+	    <div class="form tab-pane" data-title="Share this page">
+	  		<input id="via" 
+	        	   class="form-input" 
+	       	   	   type="text"
+	       	   	   ng-value="viaPageLink" 
+	        	   name="search"></input>
+	        <p style="margin-top: 1em;">To share this page, copy the link
+	        above or click on one of the options below. Anyone who clicks
+	        on the shared link will be taken to the page with hypothes.is
+	        loaded.</p>
+	        <p><a href="//twitter.com/intent/tweet?url={{viaPageLink}}"><i class="h-icon-twitter"></i> Tweet</a></p>
+	        <p><a href="//www.facebook.com/sharer/sharer.php?u={{viaPageLink}}"><i class="h-icon-facebook2"></i> Post on Facebook</a></p>
+	        <p><a href="//plus.google.com/share?url={{viaPageLink}}"><i class="h-icon-google-plus"></i> Share on Google Plus</a></p>
+	        <p><a href="mailto:?subject=Let's%20Annotate&amp;body={{viaPageLink}}"><i class="h-icon-mail"></i> Email</a></p>
+		</div>
+	</div>
+</div>

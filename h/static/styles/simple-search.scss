@@ -3,6 +3,10 @@
 
 .simple-search {
   overflow: hidden;
+  position: relative;
+  top: -29px;
+  left: 20px;
+  max-width: 65%
 }
 
 .simple-search-form {
@@ -30,7 +34,6 @@ input.simple-search-input {
   float: left;
   outline: none;
   color: $text-color;
-  width: 100%;
   border: none;
   padding: 0;
 
