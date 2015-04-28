@@ -163,6 +163,13 @@ AnnotationController = [
       angular.extend model, @annotation,
         tags: (tag.text for tag in @annotation.tags)
 
+      # Return an error message based on a server response.
+      errorMessage = (reason) ->
+        errorMessage = reason.status + " " + reason.statusText
+        if reason.data.reason
+          errorMessage = errorMessage + ": " + reason.data.reason
+        errorMessage
+
       switch @action
         when 'create'
           onFulfilled = =>
@@ -170,16 +177,18 @@ AnnotationController = [
             @editing = false
             @action = 'view'
           onRejected = (reason) ->
-            error_message = reason.status + " " + reason.statusText
-            if reason.data.reason
-              error_message = error_message + ": " + reason.data.reason
-            flash.error(error_message, "Saving annotation failed")
+            flash.error(errorMessage(reason), "Saving annotation failed")
           model.$create().then(onFulfilled, onRejected)
-        when 'delete', 'edit'
-          model.$update(id: model.id).then =>
+        when 'edit'
+          onFulfilled = =>
             $rootScope.$emit('annotationUpdated', model)
             @editing = false
             @action = 'view'
+          onRejected = (reason) ->
+            flash.error(errorMessage(reason), "Saving annotation failed")
+          model.$update(id: model.id).then(onFulfilled, onRejected)
+        when 'delete'
+          model.$update(id: model.id).then(onFulfilled, onRejected)
 
 
     ###*
