@@ -187,8 +187,6 @@ AnnotationController = [
           onRejected = (reason) ->
             flash.error(errorMessage(reason), "Saving annotation failed")
           model.$update(id: model.id).then(onFulfilled, onRejected)
-        when 'delete'
-          model.$update(id: model.id).then(onFulfilled, onRejected)
 
 
     ###*
