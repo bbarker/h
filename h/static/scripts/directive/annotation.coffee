@@ -170,9 +170,10 @@ AnnotationController = [
             @editing = false
             @action = 'view'
           onRejected = (reason) ->
-            flash.error(
-              reason.status + " " + reason.statusText,
-              "Saving annotation failed")
+            error_message = reason.status + " " + reason.statusText
+            if reason.data.reason
+              error_message = error_message + ": " + reason.data.reason
+            flash.error(error_message, "Saving annotation failed")
           model.$create().then(onFulfilled, onRejected)
         when 'delete', 'edit'
           model.$update(id: model.id).then =>
