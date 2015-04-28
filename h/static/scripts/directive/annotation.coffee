@@ -97,6 +97,13 @@ AnnotationController = [
       return false unless model?
       permissions.permits action, model, auth.user
 
+    # Return an error message based on a server response.
+    this.errorMessage = (reason) ->
+      errorMessage = reason.status + " " + reason.statusText
+      if reason.data.reason
+        errorMessage = errorMessage + ": " + reason.data.reason
+      errorMessage
+
     ###*
     # @ngdoc method
     # @name annotation.AnnotationController#delete
@@ -104,7 +111,9 @@ AnnotationController = [
     ###
     this.delete = ->
       if confirm "Are you sure you want to delete this annotation?"
-        annotationMapper.deleteAnnotation model
+        onRejected = (reason) =>
+          flash.error(@errorMessage(reason), "Deleting annotation failed")
+        annotationMapper.deleteAnnotation(model).then(null, onRejected)
 
     ###*
     # @ngdoc method
@@ -163,29 +172,22 @@ AnnotationController = [
       angular.extend model, @annotation,
         tags: (tag.text for tag in @annotation.tags)
 
-      # Return an error message based on a server response.
-      errorMessage = (reason) ->
-        errorMessage = reason.status + " " + reason.statusText
-        if reason.data.reason
-          errorMessage = errorMessage + ": " + reason.data.reason
-        errorMessage
-
       switch @action
         when 'create'
           onFulfilled = =>
             $rootScope.$emit('annotationCreated', model)
             @editing = false
             @action = 'view'
-          onRejected = (reason) ->
-            flash.error(errorMessage(reason), "Saving annotation failed")
+          onRejected = (reason) =>
+            flash.error(@errorMessage(reason), "Saving annotation failed")
           model.$create().then(onFulfilled, onRejected)
         when 'edit'
           onFulfilled = =>
             $rootScope.$emit('annotationUpdated', model)
             @editing = false
             @action = 'view'
-          onRejected = (reason) ->
-            flash.error(errorMessage(reason), "Saving annotation failed")
+          onRejected = (reason) =>
+            flash.error(@errorMessage(reason), "Saving annotation failed")
           model.$update(id: model.id).then(onFulfilled, onRejected)
 
 

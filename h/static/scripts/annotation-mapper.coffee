@@ -25,5 +25,4 @@ module.exports = [
     deleteAnnotation: (annotation) ->
       annotation.$delete(id: annotation.id).then ->
         $rootScope.$emit('annotationDeleted', annotation)
-      annotation
 ]
