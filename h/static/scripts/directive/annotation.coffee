@@ -165,14 +165,21 @@ AnnotationController = [
 
       switch @action
         when 'create'
-          model.$create().then ->
+          onFulfilled = =>
             $rootScope.$emit('annotationCreated', model)
+            @editing = false
+            @action = 'view'
+          onRejected = (reason) ->
+            flash.error(
+              reason.status + " " + reason.statusText,
+              "Saving annotation failed")
+          model.$create().then(onFulfilled, onRejected)
         when 'delete', 'edit'
-          model.$update(id: model.id).then ->
+          model.$update(id: model.id).then =>
             $rootScope.$emit('annotationUpdated', model)
+            @editing = false
+            @action = 'view'
 
-      @editing = false
-      @action = 'view'
 
     ###*
     # @ngdoc method
