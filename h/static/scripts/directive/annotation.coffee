@@ -153,6 +153,13 @@ AnnotationController = [
 
       {hasDiff, shouldShowDiff}
 
+    # Update the given annotation domain model object with the data from the
+    # given annotation view model object.
+    updateDomainModel = (domainModel, viewModel) ->
+        angular.extend(
+          domainModel, viewModel,
+          {tags: (tag.text for tag in viewModel.tags)})
+
     ###*
     # @ngdoc method
     # @name annotation.AnnotationController#save
@@ -169,14 +176,10 @@ AnnotationController = [
         tag.text not in (model.tags or [])
       tags.store(newTags)
 
-      updated_model = angular.copy(model)
-      angular.extend updated_model, @annotation,
-        tags: (tag.text for tag in @annotation.tags)
-
       switch @action
         when 'create'
+          updateDomainModel(model, @annotation)
           onFulfilled = =>
-            angular.copy(updated_model, model)
             $rootScope.$emit('annotationCreated', model)
             @editing = false
             @action = 'view'
@@ -184,14 +187,16 @@ AnnotationController = [
             flash.error(@errorMessage(reason), "Saving annotation failed")
           model.$create().then(onFulfilled, onRejected)
         when 'edit'
+          updatedModel = angular.copy(model)
+          updateDomainModel(updatedModel, @annotation)
           onFulfilled = =>
-            angular.copy(updated_model, model)
+            angular.copy(updatedModel, model)
             $rootScope.$emit('annotationUpdated', model)
             @editing = false
             @action = 'view'
           onRejected = (reason) =>
             flash.error(@errorMessage(reason), "Saving annotation failed")
-          updated_model.$update(id: updated_model.id).then(
+          updatedModel.$update(id: updatedModel.id).then(
             onFulfilled, onRejected)
 
 
