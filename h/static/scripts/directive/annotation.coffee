@@ -129,6 +129,16 @@ AnnotationController = [
     ###*
     # @ngdoc method
     # @name annotation.AnnotationController#view
+    # @description Switches the view to a viewer, closing the editor controls
+    #              if they are open.
+    ###
+    this.view = ->
+      @editing = false
+      @action = 'view'
+
+    ###*
+    # @ngdoc method
+    # @name annotation.AnnotationController#revert
     # @description Reverts an edit in progress and returns to the viewer.
     ###
     this.revert = ->
@@ -137,8 +147,7 @@ AnnotationController = [
         $rootScope.$emit('annotationDeleted', model)
       else
         this.render()
-        @action = 'view'
-        @editing = false
+        this.view()
 
     # Calculates the visual diff flags from the targets
     #
@@ -181,8 +190,7 @@ AnnotationController = [
           updateDomainModel(model, @annotation)
           onFulfilled = =>
             $rootScope.$emit('annotationCreated', model)
-            @editing = false
-            @action = 'view'
+            @view()
           onRejected = (reason) =>
             flash.error(@errorMessage(reason), "Saving annotation failed")
           model.$create().then(onFulfilled, onRejected)
@@ -192,8 +200,7 @@ AnnotationController = [
           onFulfilled = =>
             angular.copy(updatedModel, model)
             $rootScope.$emit('annotationUpdated', model)
-            @editing = false
-            @action = 'view'
+            @view()
           onRejected = (reason) =>
             flash.error(@errorMessage(reason), "Saving annotation failed")
           updatedModel.$update(id: updatedModel.id).then(
