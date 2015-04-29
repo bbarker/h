@@ -169,12 +169,14 @@ AnnotationController = [
         tag.text not in (model.tags or [])
       tags.store(newTags)
 
-      angular.extend model, @annotation,
+      updated_model = angular.copy(model)
+      angular.extend updated_model, @annotation,
         tags: (tag.text for tag in @annotation.tags)
 
       switch @action
         when 'create'
           onFulfilled = =>
+            angular.copy(updated_model, model)
             $rootScope.$emit('annotationCreated', model)
             @editing = false
             @action = 'view'
@@ -183,12 +185,14 @@ AnnotationController = [
           model.$create().then(onFulfilled, onRejected)
         when 'edit'
           onFulfilled = =>
+            angular.copy(updated_model, model)
             $rootScope.$emit('annotationUpdated', model)
             @editing = false
             @action = 'view'
           onRejected = (reason) =>
             flash.error(@errorMessage(reason), "Saving annotation failed")
-          model.$update(id: model.id).then(onFulfilled, onRejected)
+          updated_model.$update(id: updated_model.id).then(
+            onFulfilled, onRejected)
 
 
     ###*
