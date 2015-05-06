@@ -7,6 +7,7 @@ describe 'annotation', ->
   $compile = null
   $document = null
   $element = null
+  $rootScope = null
   $scope = null
   $timeout = null
   annotation = null
@@ -69,7 +70,8 @@ describe 'annotation', ->
     }
     fakePersonaFilter = sandbox.stub().returnsArg(0)
     fakeTags = {
-      filter: sandbox.stub().returns('a while ago')
+      filter: sandbox.stub().returns('a while ago'),
+      store: sandbox.stub()
     }
     fakeTime = {
       toFuzzyString: sandbox.stub().returns('a while ago')
@@ -91,10 +93,11 @@ describe 'annotation', ->
     $provide.value 'urlencodeFilter', fakeUrlEncodeFilter
     return
 
-  beforeEach inject (_$compile_, _$document_, $rootScope, _$timeout_) ->
+  beforeEach inject (_$compile_, _$document_, _$rootScope_, _$timeout_) ->
     $compile = _$compile_
     $document = _$document_
     $timeout = _$timeout_
+    $rootScope = _$rootScope_
     $scope = $rootScope.$new()
     $scope.annotation = annotation =
       id: 'deadbeef'
@@ -387,3 +390,104 @@ describe 'annotation', ->
       annotation.updated = '456'
       $scope.$digest()
       assert.calledWith(isolateScope.$emit, 'annotationUpdate')
+
+  describe "deleteAnnotation() method", ->
+    before ->
+      sinon.stub(window, "confirm")
+
+    beforeEach ->
+      createDirective()
+      fakeAnnotationMapper.deleteAnnotation = sandbox.stub()
+      fakeFlash.error = sandbox.stub()
+
+    it "calls annotationMapper.delete() if the delete is confirmed", ->
+      window.confirm.returns(true)
+      fakeAnnotationMapper.deleteAnnotation.returns(Promise.resolve())
+      controller.delete().then(->
+        assert fakeAnnotationMapper.deleteAnnotation.calledWith(annotation)
+      )
+
+    it "doesn't call annotationMapper.delete() if the delete is cancelled", ->
+      window.confirm.returns(false)
+      assert controller.delete() is undefined
+      assert fakeAnnotationMapper.deleteAnnotation.notCalled
+
+    it "flashes an error if the delete fails on the server", ->
+      window.confirm.returns(true)
+      fakeAnnotationMapper.deleteAnnotation.returns(Promise.reject({
+          status: 500,
+          statusText: "Server Error",
+          data: {}
+        })
+      )
+      controller.delete().then(->
+        assert fakeFlash.error.calledWith(
+          "500 Server Error", "Deleting annotation failed")
+      )
+
+    it "doesn't flash an error if the delete succeeds", ->
+      window.confirm.returns(true)
+      fakeAnnotationMapper.deleteAnnotation.returns(Promise.resolve())
+      controller.delete().then(->
+        assert fakeFlash.error.notCalled
+      )
+
+  describe "creating a new annotation", ->
+    beforeEach ->
+      createDirective()
+      fakeFlash.error = sandbox.stub()
+      controller.action = 'create'
+      annotation.$create = sandbox.stub()
+
+    it "emits annotationCreated when saving an annotation succeeds", ->
+      sandbox.spy($rootScope, '$emit')
+      annotation.$create.returns(Promise.resolve())
+      controller.save().then(->
+        assert $rootScope.$emit.calledWith("annotationCreated")
+      )
+
+    it "flashes an error if saving the annotation fails on the server", ->
+      annotation.$create.returns(Promise.reject({
+          status: 500,
+          statusText: "Server Error",
+          data: {}
+        })
+      )
+      controller.save().then(->
+        assert fakeFlash.error.calledWith(
+          "500 Server Error", "Saving annotation failed")
+      )
+
+    it "doesn't flash an error when saving an annotation succeeds", ->
+      annotation.$create.returns(Promise.resolve())
+      controller.save().then(->
+        assert fakeFlash.error.notCalled
+      )
+
+  describe "editing an annotation", ->
+
+    beforeEach ->
+      createDirective()
+      fakeFlash.error = sandbox.stub()
+      controller.action = 'edit'
+      annotation.$update = sandbox.stub()
+
+    it "flashes an error if saving the annotation fails on the server", ->
+      annotation.$update.returns(Promise.reject({
+          status: 500,
+          statusText: "Server Error",
+          data: {}
+        })
+      )
+
+      controller.save().then(->
+        assert fakeFlash.error.calledWith(
+          "500 Server Error", "Saving annotation failed")
+      )
+
+    it "doesn't flash an error if saving the annotation succeeds", ->
+      annotation.$update.returns(Promise.resolve())
+
+      controller.save().then(->
+        assert fakeFlash.error.notCalled
+      )
