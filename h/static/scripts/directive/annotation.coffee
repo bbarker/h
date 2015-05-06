@@ -11,6 +11,14 @@ validate = (value) ->
   (value.target?.length and not worldReadable)
 
 
+# Return an error message based on a server response.
+errorMessage = (reason) ->
+  message = reason.status + " " + reason.statusText
+  if reason.data.reason
+    message = message + ": " + reason.data.reason
+  message
+
+
 ###*
 # @ngdoc type
 # @name annotation.AnnotationController
@@ -97,13 +105,6 @@ AnnotationController = [
       return false unless model?
       permissions.permits action, model, auth.user
 
-    # Return an error message based on a server response.
-    this.errorMessage = (reason) ->
-      errorMessage = reason.status + " " + reason.statusText
-      if reason.data.reason
-        errorMessage = errorMessage + ": " + reason.data.reason
-      errorMessage
-
     ###*
     # @ngdoc method
     # @name annotation.AnnotationController#delete
@@ -112,7 +113,7 @@ AnnotationController = [
     this.delete = ->
       if confirm "Are you sure you want to delete this annotation?"
         onRejected = (reason) =>
-          flash.error(@errorMessage(reason), "Deleting annotation failed")
+          flash.error(errorMessage(reason), "Deleting annotation failed")
         annotationMapper.deleteAnnotation(model).then(null, onRejected)
 
     ###*
@@ -192,7 +193,7 @@ AnnotationController = [
             $rootScope.$emit('annotationCreated', model)
             @view()
           onRejected = (reason) =>
-            flash.error(@errorMessage(reason), "Saving annotation failed")
+            flash.error(errorMessage(reason), "Saving annotation failed")
           model.$create().then(onFulfilled, onRejected)
         when 'edit'
           updatedModel = angular.copy(model)
@@ -202,7 +203,7 @@ AnnotationController = [
             $rootScope.$emit('annotationUpdated', model)
             @view()
           onRejected = (reason) =>
-            flash.error(@errorMessage(reason), "Saving annotation failed")
+            flash.error(errorMessage(reason), "Saving annotation failed")
           updatedModel.$update(id: updatedModel.id).then(
             onFulfilled, onRejected)
 
